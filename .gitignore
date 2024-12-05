@@ -6,7 +6,7 @@ build/
 !**/src/test/**/build/
 
 *.hprof
-secret.yml
+*secret.yml
 elevator.exe
 *.log
 
