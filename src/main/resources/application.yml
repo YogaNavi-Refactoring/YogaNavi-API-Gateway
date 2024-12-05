@@ -1,0 +1,79 @@
+spring:
+  main:
+    web-application-type: reactive
+  application:
+    name: api-gateway
+  profiles:
+    active: local
+  config:
+    import:
+      - classpath:application-secret.yml
+  cloud:
+    gateway:
+      default-filters:
+        - name: MetricFilter
+        - name: RequestLoggingFilter
+    discovery:
+      enabled: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+server:
+  port: 8080
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      sla:
+        http.server.requests: 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s,5s
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+    instances:
+      auth-service:
+        baseConfig: default
+      member-service:
+        baseConfig: default
+      music-service:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 3s
+    instances:
+      auth-service:
+        baseConfig: default
+      member-service:
+        baseConfig: default
+      music-service:
+        baseConfig: default
+
+logging:
+  level:
+    com.weseethemusic.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty: INFO
