@@ -7,40 +7,69 @@ spring:
           predicates:
             - Path=/members/**, /settings/**
             - Method=POST,GET,PUT,DELETE
-          metadata:
-            health-check-url: /actuator/health
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: user-service
+                fallbackUri: forward:/fallback/user
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY
 
         - id: live-lecture-service
           uri: lb://live-lecture-service
           predicates:
             - Path=/musics/**
             - Method=POST,GET,PUT,DELETE
-          metadata:
-            health-check-url: /actuator/health
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: live-lecture-service
+                fallbackUri: forward:/fallback/live-lecture
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY
 
         - id: recorded-lecture-service
           uri: lb://recorded-lecture-service
           predicates:
             - Path=/recommend/**
             - Method=POST,GET,PUT,DELETE
-          metadata:
-            health-check-url: /actuator/health
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: recorded-lecture-service
+                fallbackUri: forward:/fallback/recorded-lecture
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY
 
         - id: signaling-service
           uri: lb://signaling-service
           predicates:
             - Path=/signaling/**
             - Method=POST,GET,PUT,DELETE
-          metadata:
-            health-check-url: /actuator/health
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: signaling-service
+                fallbackUri: forward:/fallback/signaling
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY
+
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8081/eureka/
+      defaultZone: http://${eureka.client.service-url.credentials}@localhost:8761/eureka/
 
-service:
-  url:
-    user: http://localhost:8082
-    live-lecture: http://localhost:8083
-    recorded-lecture: http://localhost:8084
-    signaling: http://localhost:8085
+management:
+  endpoints:
+    enabled-by-default: true
+    web:
+      exposure:
+        include: "*"
