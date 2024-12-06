@@ -1,0 +1,46 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/members/**, /settings/**
+            - Method=POST,GET,PUT,DELETE
+          metadata:
+            health-check-url: /actuator/health
+
+        - id: live-lecture-service
+          uri: lb://live-lecture-service
+          predicates:
+            - Path=/musics/**
+            - Method=POST,GET,PUT,DELETE
+          metadata:
+            health-check-url: /actuator/health
+
+        - id: recorded-lecture-service
+          uri: lb://recorded-lecture-service
+          predicates:
+            - Path=/recommend/**
+            - Method=POST,GET,PUT,DELETE
+          metadata:
+            health-check-url: /actuator/health
+
+        - id: signaling-service
+          uri: lb://signaling-service
+          predicates:
+            - Path=/signaling/**
+            - Method=POST,GET,PUT,DELETE
+          metadata:
+            health-check-url: /actuator/health
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8081/eureka/
+
+service:
+  url:
+    user: http://localhost:8082
+    live-lecture: http://localhost:8083
+    recorded-lecture: http://localhost:8084
+    signaling: http://localhost:8085
