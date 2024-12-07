@@ -24,7 +24,7 @@ public class MetricFilter extends AbstractGatewayFilterFactory<Object> {
     }
 
     /**
-     * GatewayFilter 구현 각 요청별 처리 시간 및 결과를 측정 및 기록
+     * 각 요청별 처리 시간 및 결과를 측정 및 기록
      *
      * @return GatewayFilter
      */

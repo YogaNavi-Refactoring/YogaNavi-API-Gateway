@@ -17,11 +17,14 @@ spring:
       enabled: true
 
 eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
   client:
     register-with-eureka: true
     fetch-registry: true
-  instance:
-    prefer-ip-address: true
 
 server:
   port: 8080
@@ -53,27 +56,31 @@ resilience4j:
         waitDurationInOpenState: 5s
         failureRateThreshold: 50
     instances:
-      auth-service:
+      user-service:
         baseConfig: default
-      member-service:
+      recorded-lecture-service:
         baseConfig: default
-      music-service:
+      live-lecture-service:
+        baseConfig: default
+      signaling-service:
         baseConfig: default
   timelimiter:
     configs:
       default:
         timeoutDuration: 3s
     instances:
-      auth-service:
+      user-service:
         baseConfig: default
-      member-service:
+      recorded-lecture-service:
         baseConfig: default
-      music-service:
+      live-lecture-service:
+        baseConfig: default
+      signaling-service:
         baseConfig: default
 
 logging:
   level:
-    com.weseethemusic.gateway: DEBUG
+    com.yoganavi.gateway: DEBUG
     org.springframework.cloud.gateway: DEBUG
     org.springframework.web.reactive: DEBUG
     reactor.netty: INFO
