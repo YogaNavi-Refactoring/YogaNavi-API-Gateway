@@ -14,75 +14,98 @@ public class RouteConfig {
     private final RequestLoggingFilter requestLoggingFilter;
 
     public RouteConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                       RequestLoggingFilter requestLoggingFilter) {
+        RequestLoggingFilter requestLoggingFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.requestLoggingFilter = requestLoggingFilter;
     }
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
-        // 공개 경로
+        // 토큰 검증 필요 없음
         JwtAuthenticationFilter.Config authConfig = new JwtAuthenticationFilter.Config()
-                .addExcludedPath("/user/login")
-                .addExcludedPath("/user/register/email")
-                .addExcludedPath("/user/register/authnumber")
-                .addExcludedPath("/user/register")
-                .addExcludedPath("/user/find-password/email")
-                .addExcludedPath("/user/find-password/authnumber")
-                .addExcludedPath("/user/find-password");
+            .addExcludedPath("/user/test/**")
+            .addExcludedPath("/user/fallback/test/**")
+            .addExcludedPath("/user/login")
+            .addExcludedPath("/user/register/**")
+            .addExcludedPath("/user/edit/credential/**");
 
         return builder.routes()
-                // UseService 공개 라우트
-                .route("user-service-public", r -> r
-                        .path("/user/login", "/user/register/**", "/user/find-password/**")
-                        .filters(f -> f.filter(requestLoggingFilter.apply(new Object())))
-                        .uri("lb://user-service"))
+            // UserService - 공개
+            .route("user-service-public", r -> r
+                .path("/user/test/**", "/user/fallback/test/**",
+                    "/user/login", "/user/register/**",
+                    "/user/edit/credential/**")
+                .filters(f -> f
+                    .filter(requestLoggingFilter.apply(new Object()))
+                    .circuitBreaker(config -> config
+                        .setName("user-service-test")
+                        .setFallbackUri("forward:/user/fallback/test"))
+                    .retry(3))
+                .uri("lb://user-service"))
 
-                // UserService 보호된 라우트
-                .route("user-service-protected", r -> r
-                        .path("/user/**", "/settings/**")
-                        .and()
-                        .not(p -> p.path("/user/login", "/user/register/**", "/user/find-password/**"))
-                        .filters(f -> f
-                                .filter(requestLoggingFilter.apply(new Object()))
-                                .filter(jwtAuthenticationFilter.apply(authConfig)))
-                        .uri("lb://user-service"))
+            // UserService - 보호
+            .route("user-service-protected", r -> r
+                .path("/user/**")
+                .and()
+                .not(p -> p.path("/user/test/**", "/user/fallback/test/**",
+                    "/user/login", "/user/register/**",
+                    "/user/edit/credential/**"))
+                .filters(f -> f
+                    .filter(requestLoggingFilter.apply(new Object()))
+                    .filter(jwtAuthenticationFilter.apply(authConfig))
+                    .circuitBreaker(config -> config
+                        .setName("user-service")
+                        .setFallbackUri("/user/fallback"))
+                    .retry(3))
+                .uri("lb://user-service"))
 
-                // LiveLectureService
-                .route("live-lecture-service", r -> r
-                        .path("/live-lecture/**")
-                        .filters(f -> f
-                                .filter(requestLoggingFilter.apply(new Object()))
-                                .filter(jwtAuthenticationFilter.apply(authConfig))
-                                .circuitBreaker(config -> config
-                                        .setName("live-lecture-service")
-                                        .setFallbackUri("/fallback/live-lecture"))
-                                .retry(3))
-                        .uri("lb://live-lecture-service"))
+            // LiveLectureService
+            .route("live-lecture-service", r -> r
+                .path("/live-lecture/**")
+                .filters(f -> f
+                    .filter(requestLoggingFilter.apply(new Object()))
+                    .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .circuitBreaker(config -> config
+                        .setName("live-lecture-service")
+                        .setFallbackUri("/fallback/live-lecture"))
+                    .retry(3))
+                .uri("lb://lecture-service"))
 
-                // RecordedLectureService
-                .route("recorded-lecture-service", r -> r
-                        .path("/recorded-lecture/**")
-                        .filters(f -> f
-                                .filter(requestLoggingFilter.apply(new Object()))
-                                .filter(jwtAuthenticationFilter.apply(authConfig))
-                                .circuitBreaker(config -> config
-                                        .setName("recorded-lecture-service")
-                                        .setFallbackUri("/fallback/recorded-lecture"))
-                                .retry(3))
-                        .uri("lb://recorded-lecture-service"))
+            // RecordedLectureService
+            .route("recorded-lecture-service", r -> r
+                .path("/recorded-lecture/**")
+                .filters(f -> f
+                    .filter(requestLoggingFilter.apply(new Object()))
+                    .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .circuitBreaker(config -> config
+                        .setName("recorded-lecture-service")
+                        .setFallbackUri("/fallback/recorded-lecture"))
+                    .retry(3))
+                .uri("lb://lecture-service"))
 
-                // SignalingService
-                .route("signaling-service", r -> r
-                        .path("/signaling/**")
-                        .filters(f -> f
-                                .filter(requestLoggingFilter.apply(new Object()))
-                                .filter(jwtAuthenticationFilter.apply(authConfig))
-                                .circuitBreaker(config -> config
-                                        .setName("signaling-service")
-                                        .setFallbackUri("/fallback/signaling"))
-                                .retry(3))
-                        .uri("lb://signaling-service"))
-                .build();
+            // LectureService
+            .route("lecture-service", r -> r
+                .path("/lecture/**")
+                .filters(f -> f
+                    .filter(requestLoggingFilter.apply(new Object()))
+                    .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .circuitBreaker(config -> config
+                        .setName("lecture-service")
+                        .setFallbackUri("/fallback/lecture"))
+                    .retry(3))
+                .uri("lb://lecture-service"))
+
+            // SignalingService
+            .route("signaling-service", r -> r
+                .path("/signaling/**")
+                .filters(f -> f
+                    .filter(requestLoggingFilter.apply(new Object()))
+                    .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .circuitBreaker(config -> config
+                        .setName("signaling-service")
+                        .setFallbackUri("/fallback/signaling"))
+                    .retry(3))
+                .uri("lb://signaling-service"))
+            .build();
     }
 }

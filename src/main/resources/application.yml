@@ -52,15 +52,21 @@ resilience4j:
       default:
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
-        permittedNumberOfCallsInHalfOpenState: 3
         waitDurationInOpenState: 5s
         failureRateThreshold: 50
+        recordExceptions:
+          - java.lang.Exception
+          - java.util.concurrent.TimeoutException
     instances:
       user-service:
         baseConfig: default
-      recorded-lecture-service:
+      user-service-test:
         baseConfig: default
       live-lecture-service:
+        baseConfig: default
+      recorded-lecture-service:
+        baseConfig: default
+      lecture-service:
         baseConfig: default
       signaling-service:
         baseConfig: default
@@ -71,9 +77,13 @@ resilience4j:
     instances:
       user-service:
         baseConfig: default
-      recorded-lecture-service:
+      user-service-test:
         baseConfig: default
       live-lecture-service:
+        baseConfig: default
+      recorded-lecture-service:
+        baseConfig: default
+      lecture-service:
         baseConfig: default
       signaling-service:
         baseConfig: default

@@ -2,25 +2,25 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: user-service
+        - id: user-service-routes
           uri: lb://user-service
           predicates:
-            - Path=/members/**, /settings/**
+            - Path=/user/**
             - Method=POST,GET,PUT,DELETE
           filters:
             - name: CircuitBreaker
               args:
                 name: user-service
-                fallbackUri: forward:/fallback/user
+                fallbackUri: forward:/user/fallback
             - name: Retry
               args:
                 retries: 3
                 statuses: BAD_GATEWAY
 
-        - id: live-lecture-service
-          uri: lb://live-lecture-service
+        - id: live-lecture-service-routes
+          uri: lb://lecture-service
           predicates:
-            - Path=/musics/**
+            - Path=/live-lecture/**
             - Method=POST,GET,PUT,DELETE
           filters:
             - name: CircuitBreaker
@@ -32,10 +32,10 @@ spring:
                 retries: 3
                 statuses: BAD_GATEWAY
 
-        - id: recorded-lecture-service
-          uri: lb://recorded-lecture-service
+        - id: recorded-lecture-service-routes
+          uri: lb://lecture-service
           predicates:
-            - Path=/recommend/**
+            - Path=/recorded-lecture/**
             - Method=POST,GET,PUT,DELETE
           filters:
             - name: CircuitBreaker
@@ -47,16 +47,16 @@ spring:
                 retries: 3
                 statuses: BAD_GATEWAY
 
-        - id: signaling-service
-          uri: lb://signaling-service
+        - id: lecture-service-routes
+          uri: lb://lecture-service
           predicates:
-            - Path=/signaling/**
+            - Path=/lecture/**
             - Method=POST,GET,PUT,DELETE
           filters:
             - name: CircuitBreaker
               args:
-                name: signaling-service
-                fallbackUri: forward:/fallback/signaling
+                name: lecture-service
+                fallbackUri: forward:/fallback/lecture
             - name: Retry
               args:
                 retries: 3
