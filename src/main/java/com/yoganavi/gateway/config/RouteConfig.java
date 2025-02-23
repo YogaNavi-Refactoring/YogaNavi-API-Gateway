@@ -1,22 +1,26 @@
 package com.yoganavi.gateway.config;
 
+import com.yoganavi.gateway.filter.CustomFallbackFilter;
 import com.yoganavi.gateway.filter.JwtAuthenticationFilter;
 import com.yoganavi.gateway.filter.RequestLoggingFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 
 @Configuration
 public class RouteConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RequestLoggingFilter requestLoggingFilter;
+    private final CustomFallbackFilter customFallbackFilter;
 
     public RouteConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-        RequestLoggingFilter requestLoggingFilter) {
+        RequestLoggingFilter requestLoggingFilter, CustomFallbackFilter customFallbackFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.requestLoggingFilter = requestLoggingFilter;
+        this.customFallbackFilter = customFallbackFilter;
     }
 
     @Bean
@@ -37,10 +41,13 @@ public class RouteConfig {
                     "/user/edit/credential/**")
                 .filters(f -> f
                     .filter(requestLoggingFilter.apply(new Object()))
+                    .filter(customFallbackFilter.apply(new CustomFallbackFilter.Config()))
                     .circuitBreaker(config -> config
                         .setName("user-service-test")
-                        .setFallbackUri("forward:/user/fallback/test"))
-                    .retry(3))
+                        .addStatusCode("500"))
+                    .retry(config -> config
+                        .setRetries(3)
+                        .setStatuses(HttpStatus.BAD_GATEWAY)))
                 .uri("lb://user-service"))
 
             // UserService - 보호
@@ -53,10 +60,13 @@ public class RouteConfig {
                 .filters(f -> f
                     .filter(requestLoggingFilter.apply(new Object()))
                     .filter(jwtAuthenticationFilter.apply(authConfig))
+                    .filter(customFallbackFilter.apply(new CustomFallbackFilter.Config()))
                     .circuitBreaker(config -> config
                         .setName("user-service")
-                        .setFallbackUri("/user/fallback"))
-                    .retry(3))
+                        .addStatusCode("500"))
+                    .retry(config -> config
+                        .setRetries(3)
+                        .setStatuses(HttpStatus.BAD_GATEWAY)))
                 .uri("lb://user-service"))
 
             // LiveLectureService
@@ -65,10 +75,13 @@ public class RouteConfig {
                 .filters(f -> f
                     .filter(requestLoggingFilter.apply(new Object()))
                     .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .filter(customFallbackFilter.apply(new CustomFallbackFilter.Config()))
                     .circuitBreaker(config -> config
                         .setName("live-lecture-service")
-                        .setFallbackUri("/fallback/live-lecture"))
-                    .retry(3))
+                        .addStatusCode("500"))
+                    .retry(config -> config
+                        .setRetries(3)
+                        .setStatuses(HttpStatus.BAD_GATEWAY)))
                 .uri("lb://lecture-service"))
 
             // RecordedLectureService
@@ -77,10 +90,13 @@ public class RouteConfig {
                 .filters(f -> f
                     .filter(requestLoggingFilter.apply(new Object()))
                     .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .filter(customFallbackFilter.apply(new CustomFallbackFilter.Config()))
                     .circuitBreaker(config -> config
                         .setName("recorded-lecture-service")
-                        .setFallbackUri("/fallback/recorded-lecture"))
-                    .retry(3))
+                        .addStatusCode("500"))
+                    .retry(config -> config
+                        .setRetries(3)
+                        .setStatuses(HttpStatus.BAD_GATEWAY)))
                 .uri("lb://lecture-service"))
 
             // LectureService
@@ -89,10 +105,13 @@ public class RouteConfig {
                 .filters(f -> f
                     .filter(requestLoggingFilter.apply(new Object()))
                     .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .filter(customFallbackFilter.apply(new CustomFallbackFilter.Config()))
                     .circuitBreaker(config -> config
                         .setName("lecture-service")
-                        .setFallbackUri("/fallback/lecture"))
-                    .retry(3))
+                        .addStatusCode("500"))
+                    .retry(config -> config
+                        .setRetries(3)
+                        .setStatuses(HttpStatus.BAD_GATEWAY)))
                 .uri("lb://lecture-service"))
 
             // SignalingService
@@ -101,10 +120,13 @@ public class RouteConfig {
                 .filters(f -> f
                     .filter(requestLoggingFilter.apply(new Object()))
                     .filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config()))
+                    .filter(customFallbackFilter.apply(new CustomFallbackFilter.Config()))
                     .circuitBreaker(config -> config
                         .setName("signaling-service")
-                        .setFallbackUri("/fallback/signaling"))
-                    .retry(3))
+                        .addStatusCode("500"))
+                    .retry(config -> config
+                        .setRetries(3)
+                        .setStatuses(HttpStatus.BAD_GATEWAY)))
                 .uri("lb://signaling-service"))
             .build();
     }
