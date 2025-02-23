@@ -50,10 +50,12 @@ resilience4j:
   circuitbreaker:
     configs:
       default:
-        slidingWindowSize: 10
+        slidingWindowSize: 8
         minimumNumberOfCalls: 5
-        waitDurationInOpenState: 5s
         failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
         recordExceptions:
           - java.lang.Exception
           - java.util.concurrent.TimeoutException
@@ -73,7 +75,7 @@ resilience4j:
   timelimiter:
     configs:
       default:
-        timeoutDuration: 3s
+        timeoutDuration: 5s
     instances:
       user-service:
         baseConfig: default

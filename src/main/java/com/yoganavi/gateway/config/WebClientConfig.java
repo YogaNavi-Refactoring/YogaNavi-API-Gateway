@@ -1,5 +1,6 @@
 package com.yoganavi.gateway.config;
 
+import io.netty.channel.ChannelOption;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +21,8 @@ public class WebClientConfig {
     public WebClient.Builder webClientBuilder() {
         return WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
-                .responseTimeout(Duration.ofSeconds(5))))
+                .responseTimeout(Duration.ofSeconds(5))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)))
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     }
 
